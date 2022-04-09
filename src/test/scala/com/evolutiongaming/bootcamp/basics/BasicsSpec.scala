@@ -36,7 +36,7 @@ class BasicsSpec extends AnyFlatSpec with ScalaCheckDrivenPropertyChecks {
   }
 
   "addNTimes2" should "add 2 , 4 and multiply by default value" in {
-    addNTimes2(x = 2, y= 4) shouldEqual 6
+    addNTimes2(x = 2, y = 4) shouldEqual 6
   }
 
   it should "work for all numbers" in {
@@ -69,6 +69,20 @@ class BasicsSpec extends AnyFlatSpec with ScalaCheckDrivenPropertyChecks {
 
   "allTupleBooleanBooleans" should "be correct" in {
     allTupleBooleanBooleans.size shouldEqual 4
+  }
+
+  "gcd" should "be correct" in {
+    gcd(54, 24) shouldEqual 6
+    gcd(48, 18) shouldEqual 6
+    gcd(4, 2) shouldEqual 2
+  }
+
+  "lcm" should "be correct" in {
+    lcm(4, 6) shouldEqual 12
+    lcm(4, 8) shouldEqual 8
+    lcm(10, 10) shouldEqual 10
+    lcm(3, 7) shouldEqual 21
+    lcm(5, 1000001) shouldEqual 5000005
   }
 }
 

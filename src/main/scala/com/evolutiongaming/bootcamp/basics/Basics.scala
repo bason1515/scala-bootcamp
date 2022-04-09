@@ -417,9 +417,12 @@ object Basics {
   // Homework. Implement functions that calculate https://en.wikipedia.org/wiki/Least_common_multiple and
   // https://en.wikipedia.org/wiki/Greatest_common_divisor for integers.
 
-  def lcm(a: Int, b: Int): Int = ???
+  def lcm(a: Int, b: Int): Int = (a * b) / gcd(a, b)
 
-  def gcd(a: Int, b: Int): Int = ???
+  def gcd(a: Int, b: Int): Int = {
+    if (a == b) return a
+    if (a > b) gcd(a - b, b) else gcd(a, b - a)
+  }
 
   // Create a new Git public repository for your homework solutions, use `basics` package for this homework.
   // You can use `sbt new scala/hello-world.g8` to start a new bare-bones Scala SBT project.
