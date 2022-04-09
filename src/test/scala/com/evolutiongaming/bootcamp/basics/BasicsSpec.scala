@@ -35,6 +35,10 @@ class BasicsSpec extends AnyFlatSpec with ScalaCheckDrivenPropertyChecks {
     add(2, 3) shouldEqual 5
   }
 
+  "addNTimes2" should "add 2 , 4 and multiply by default value" in {
+    addNTimes2(x = 2, y= 4) shouldEqual 6
+  }
+
   it should "work for all numbers" in {
     forAll { (a: Int, b: Int) =>
       add(a, b) shouldEqual a + b
