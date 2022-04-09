@@ -35,4 +35,17 @@ class ClassesAndTraitsSpec extends AnyFlatSpec with ScalaCheckDrivenPropertyChec
     mbr.minY shouldEqual -5
     mbr.maxY shouldEqual 7
   }
+
+  val stack = Stack[Int](List(1))
+  "push" should "add element to the top of stack" in {
+    stack.push(2) shouldEqual Stack[Int](List(2, 1))
+  }
+
+  "peep" should "return element at the top" in {
+    stack.peek shouldEqual 1
+  }
+
+  "pop" should "return and remove element at top" in {
+    stack.pop shouldEqual (1, Stack[Int](List()))
+  }
 }
