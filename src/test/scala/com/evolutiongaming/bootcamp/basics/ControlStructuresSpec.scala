@@ -23,6 +23,13 @@ class ControlStructuresSpec extends AnyFlatSpec with ScalaCheckDrivenPropertyChe
     checkFizzBuzz(fizzBuzz2)
   }
 
+  "monthName" should  "display correct month or error" in {
+    monthName(1) shouldEqual Right("January")
+    monthName(12) shouldEqual Right("December")
+    monthName(13) shouldEqual Left("Month 13 is too large")
+    monthName(0) shouldEqual Left("Month 0 is too small")
+  }
+
   "applyNTimesForInts" should "work correctly" in {
     forAll(choose(1, 1000), choose(1, 1000)) {
       case (a: Int, b: Int) =>
