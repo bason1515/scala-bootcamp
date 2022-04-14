@@ -49,7 +49,7 @@ object DataStructures {
 
   val joinLists = immutableList2 ::: List(8, 9) // 1 :: 2 :: 3 :: 8 :: 9 :: Nil
 
-  val headOfList1 = Try(emptyList1.head)// what will happen here?!
+  val headOfList1 = Try(emptyList1.head) // what will happen here?!
   val headOfList2 = emptyList1.headOption // None
   val headOfList3 = immutableList2.headOption // Some(1)
 
@@ -80,9 +80,11 @@ object DataStructures {
 
   // Exercise. Write a function that checks if all values in a `List` are equal.
   // Think about what you think your function should return if `list` is empty, and why.
-  def allEqual[T](list: List[T]): Boolean = {
-    false // TODO: implement
-  }
+    def allEqual[T](list: List[T]): Boolean = list.distinct.length < 2
+//  def allEqual[T](list: List[T]): Boolean = list match {
+//    case Nil => true
+//    case _ => list.toSet.size == 1
+//  }
 
   // Maps
   //
@@ -123,21 +125,25 @@ object DataStructures {
   // `vegetableAmounts` and prices per unit from `vegetablePrices`. Assume the price is 10 if not available
   // in `vegetablePrices`.
   val totalVegetableCost: Int = {
-    17 // implement here
-  }
+    for {
+      (key, amount) <- vegetableAmounts
+      price = vegetablePrices.getOrElse(key, 10)
+    } yield price * amount
+  }.sum
 
   // Exercise. Given the vegetable weights (per 1 unit of vegetable) in `vegetableWeights` and vegetable
   // amounts (in units) in `vegetableAmounts`, calculate the total weight per type of vegetable, if known.
   //
   // For example, the total weight of "olives" is 2 * 32 == 64.
-  val totalVegetableWeights: Map[String, Int] = { // implement here
-    Map()
-  }
+  val totalVegetableWeights: Map[String, Int] = for {
+    (v, vAmount) <- vegetableAmounts
+    vWeight <- vegetableWeights.get(v).toList
+  } yield v -> vWeight * vAmount
 
   // Ranges and Sequences
-  val inclusiveRange: Seq[Int] = 2 to 4    // 2, 3, 4, or <=
+  val inclusiveRange: Seq[Int] = 2 to 4 // 2, 3, 4, or <=
   val exclusiveRange: Seq[Int] = 2 until 4 // 2, 3, or <
-  val withStep: Seq[Int] = 2 to 40 by 7    // 2, 9, 16, 23, 30, 37
+  val withStep: Seq[Int] = 2 to 40 by 7 // 2, 9, 16, 23, 30, 37
 
   // Seq, IndexedSeq and LinearSeq traits are implemented by many collections and contain various useful
   // methods. See https://docs.scala-lang.org/overviews/collections/seqs.html in case you are interested

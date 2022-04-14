@@ -48,6 +48,10 @@ class DataStructuresSpec extends AnyFlatSpec with ScalaCheckDrivenPropertyChecks
     allEqual(List("a", "a", "b", "a")) shouldBe false
   }
 
+  "allEqual" should "work for list which is Nil" in {
+    allEqual(List()) shouldBe true
+  }
+
   "sort considering equal values" should "be correct on example 1" in {
     val input = Map("a" -> 1, "b" -> 2, "c" -> 4, "d" -> 1, "e" -> 0, "f" -> 2, "g" -> 2)
     val expected = List(Set("e") -> 0, Set("a", "d") -> 1, Set("b", "f", "g") -> 2, Set("c") -> 4)
