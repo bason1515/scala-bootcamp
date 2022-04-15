@@ -197,10 +197,12 @@ object DataStructures {
   //   - Handle the trivial case where `n == 1`.
   //   - For other `n`, for each `set` element `elem`, generate all subsets of size `n - 1` from the set
   //     that don't include `elem`, and add `elem` to them.
-  def allSubsetsOfSizeN[A](set: Set[A], n: Int): Set[Set[A]] = {
-    // replace with correct implementation
-    println(n)
-    Set(set)
+  def allSubsetsOfSizeN[A](set: Set[A], n: Int): Set[Set[A]] = n match {
+    case 1 => set.map(e => Set(e))
+    case _ => for {
+      elem <- set
+      subset <- allSubsetsOfSizeN(set - elem, n - 1)
+    } yield subset + elem
   }
 
   // Homework
@@ -220,5 +222,10 @@ object DataStructures {
   //
   // Input `Map("a" -> 1, "b" -> 2, "c" -> 4, "d" -> 1, "e" -> 0, "f" -> 2, "g" -> 2)` should result in
   // output `List(Set("e") -> 0, Set("a", "d") -> 1, Set("b", "f", "g") -> 2, Set("c") -> 4)`.
-  def sortConsideringEqualValues[T](map: Map[T, Int]): List[(Set[T], Int)] = ???
+  def sortConsideringEqualValues[T](map: Map[T, Int]): List[(Set[T], Int)] = {
+    map.groupBy(_._2)
+      .map(x => (x._2.keySet, x._1))
+      .toList
+      .sortBy(_._2)
+  }
 }

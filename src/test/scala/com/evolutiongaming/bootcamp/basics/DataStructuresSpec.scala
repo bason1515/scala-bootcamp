@@ -9,10 +9,23 @@ class DataStructuresSpec extends AnyFlatSpec with ScalaCheckDrivenPropertyChecks
   "allSubSetsOfSizeN" should "work correctly on 2 from Set(1, 2, 3)" in {
     allSubsetsOfSizeN(Set(1, 2, 3), 2) shouldEqual Set(Set(1, 2), Set(2, 3), Set(1, 3))
   }
+  "allSubSetsOfSizeN" should "work correctly on 3 from Set(1, 2, 3, 4, 5)" in {
+    allSubsetsOfSizeN(Set(1, 2, 3, 4, 5), 3) shouldEqual
+      Set(
+        Set(1, 2, 3), Set(2, 3, 4), Set(3, 4, 5), Set(1, 2, 4), Set(1, 2, 5),
+        Set(1, 3, 4), Set(1, 3, 5), Set(1, 4, 5), Set(2, 3, 5), Set(2, 4, 5)
+      )
+  }
+  "allSubSetsOfSizeN" should "work correctly on 1 from Set(1, 2, 3)" in {
+    allSubsetsOfSizeN(Set(1, 2, 3), 1) shouldEqual Set(Set(1), Set(2), Set(3))
+  }
+  "allSubSetsOfSizeN" should "work correctly on 0 from Set(1, 2, 3)" in {
+    allSubsetsOfSizeN(Set(1, 2, 3), -1) shouldEqual Set()
+  }
 
   it should "work correctly" in {
     def fact(num: Int): BigDecimal = {
-      (1 to num).map(x => BigDecimal.valueOf(x.toLong)).foldLeft(BigDecimal.valueOf(1)) ((a, b) => a * b)
+      (1 to num).map(x => BigDecimal.valueOf(x.toLong)).foldLeft(BigDecimal.valueOf(1))((a, b) => a * b)
     }
 
     val set = (0 until 16).toSet
@@ -59,7 +72,7 @@ class DataStructuresSpec extends AnyFlatSpec with ScalaCheckDrivenPropertyChecks
     obtained shouldEqual expected
   }
 
-   it should "be correct on example 2" in {
+  it should "be correct on example 2" in {
     val values = Set("a1", "a2", "b1", "c1", "c2", "d1").map { x =>
       x -> x.head.toInt
     }.toMap
