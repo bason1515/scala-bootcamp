@@ -164,12 +164,12 @@ object ControlStructures {
   //
   // Thus `applyNTimesForInts(_ + 1, 4)(3)` should return `((((3 + 1) + 1) + 1) + 1)` or `7`.
   def applyNTimesForInts(f: Int => Int, n: Int): Int => Int = { x: Int =>
-    if(n > 1) applyNTimesForInts(f, n-1)(f(x)) else f(x)
+    if (n > 1) applyNTimesForInts(f, n - 1)(f(x)) else f(x)
   }
 
   // Exercise: Convert the function `applyNTimesForInts` into a polymorphic function `applyNTimes`:
   def applyNTimes[A](f: A => A, n: Int): A => A = { x: A =>
-    if(n > 1) applyNTimes(f, n-1)(f(x)) else f(x)
+    if (n > 1) applyNTimes(f, n - 1)(f(x)) else f(x)
   }
 
   // `map`, `flatMap` and `filter` are not control structures, but methods that various collections (and
@@ -267,8 +267,11 @@ object ControlStructures {
 
   trait UserService {
     def validateUserName(name: String): Either[ErrorMessage, Unit]
+
     def findUserId(name: String): Either[ErrorMessage, UserId]
+
     def validateAmount(amount: Amount): Either[ErrorMessage, Unit]
+
     def findBalance(userId: UserId): Either[ErrorMessage, Amount]
 
     /** Upon success, returns the resulting balance */
@@ -310,14 +313,17 @@ object ControlStructures {
   // Exercise:
   //
   // Given:
-  //  A = Set(0, 1, 2)
-  //  B = Set(true, false)
+  val aa = Set[Int](0, 1, 2)
+  val bb = Set[Boolean](true, false)
   //
   // List all the elements in `A * B`.
   //
   // Use a "for comprehension" in your solution.
 
-  val AProductB: Set[(Int, Boolean)] = Set()
+  val AProductB: Set[(Int, Boolean)] = for {
+    x <- aa
+    y <- bb
+  } yield (x, y)
 
   // Exercise:
   //
@@ -329,7 +335,10 @@ object ControlStructures {
   //
   // Use "map" and `++` (`Set` union operation) in your solution.
 
-  val ASumB: Set[Either[Int, Boolean]] = Set()
+  val ASumB: Set[Either[Int, Boolean]] = (aa ++ bb).map(v => v match {
+    case x: Boolean => Right(x)
+    case y: Int => Left(y)
+  }).toSet
 
   // Scala inherits the standard try-catch-finally construct from Java:
   def printFile(fileName: String): Unit = {
