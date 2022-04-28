@@ -48,19 +48,43 @@ object AlgebraicDataTypes {
   // `Age` has a single, public val parameter that is the underlying runtime representation. The type at
   // compile time is `Age`, but at runtime, the representation is `Int`. Case classes can also be used to
   // define value classes, see `Name`.
-  class Age(val value: Int) extends AnyVal
-  final case class Name(value: String) extends AnyVal {
+  final case class Age private (value: Int) extends AnyVal
+  final case class Name private (value: String) extends AnyVal {
     def greeting: String = s"Hello, $value!"
   }
 
+//  object Name {
+//    def apply(value: String): Option[Name] =
+//      if(value.isEmpty) Some(value)
+//      else None
+//  }
+//  object Age {
+//    def apply(value: Int): Either[String, Age] =
+//      if(value < 0) Left("negative age")
+//      else if(value > 150) Left("Age is over 150")
+//      else Right(value)
+//  }
+//  object Surname {
+//    def apply(value: String): Option[Surname] =
+//      if(value.isEmpty) Some(value)
+//      else None
+//  }
+//  val person3 = for {
+//    name <- Name("Name").toRight("Invalid Name")
+//    age <- Age(-1)
+//    surname <- Surname("surname").toRight("Invalid Name")
+//  } yield Person(name, age, surname)
+
   // Type aliases may seem similar to value classes, but they provide no additional type safety. They can,
   // however, increase readability of the code in certain scenarios.
-  final case class Surname(value: String) extends AnyVal
+  final case class Surname private (value: String) extends AnyVal
   type SurnameAlias = String // No additional type safety in comparison to `String`, arguably a bad example!
 
   // Question. Can you come up with an example, where using type aliases would make sense?
 
   // Exercise. Rewrite the product type `Person`, so that it uses value classes.
+//  final case class Person2(name: Name, surname: Surname, age: Age)
+//  val person = Person2(Name("Name"), Surname("Surname"), Age(99))
 
   // SMART CONSTRUCTORS
 
@@ -69,14 +93,24 @@ object AlgebraicDataTypes {
   // Exercise. Create a smart constructor for `GameLevel` that only permits levels from 1 to 80 (inclusive).
   final case class GameLevel private (value: Int) extends AnyVal
   object GameLevel {
-    def create(value: Int): Option[GameLevel] = ???
+    def create(value: Int): Option[GameLevel] =
+//      if(1 to 80 contains value) Some(GameLevel(value))
+//      else None
+      Option.when(1 to 80 contains value)(GameLevel(value))
   }
 
   // To disable creating case classes in any other way besides smart constructor, the following pattern
   // can be used. However, it is rather syntax-heavy and cannot be combined with value classes.
   sealed abstract case class Time private (hour: Int, minute: Int)
   object Time {
-    def create(hour: Int, minute: Int): Either[String, Time] = Right(new Time(hour, minute) {})
+//    def create(hour: Int, minute: Int): Either[String, Time] = for {
+//      h <- if(0 to 23 contains hour) Right(hour) else Left("Invalid hour value")
+//      m <- if(0 to 23 contains minute) Right(minute) else Left("Invalid minute value")
+//    } yield new Time(h, m){}
+      def create(hour: Int, minute: Int): Either[String, Time] = for {
+        h <- Either.cond((0 to 23) contains hour, hour, "Invalid hour value")
+        m <- Either.cond((0 to 59) contains minute, minute, "Invalid minute value")
+      } yield new Time(h,m){}
   }
 
   // Exercise. Implement the smart constructor for `Time` that only permits values from 00:00 to 23:59 and
@@ -93,7 +127,7 @@ object AlgebraicDataTypes {
     final case object True extends Bool
     final case object False extends Bool
   }
-
+  val cube = (Math.pow(2,1)) until 10
   // Note that sealed keyword means that `Bool` can only be extended in the same file as its declaration.
   // Question. Why do you think sealed keyword is essential to define sum types?
 
@@ -135,7 +169,12 @@ object AlgebraicDataTypes {
     creditCardService: CreditCardService,
     cashService: CashService,
   ) {
-    def processPayment(amount: BigDecimal, method: PaymentMethod): PaymentStatus = ???
+    def processPayment(amount: BigDecimal, method: PaymentMethod): PaymentStatus = method match {
+      case BankAccount(accountNumber) => bankAccountService.processPayment(amount, accountNumber)
+      case cc: CreditCard => creditCardService.processPayment(amount, cc)
+      case PaymentMethod.Cash => cashService.processPayment(amount)
+      case _ => PaymentStatus("Payment Declined.")
+    }
   }
 
   // Let's compare that to `NaivePaymentService.processPayment` implementation, which does not use ADTs, but

@@ -1,6 +1,7 @@
 package com.evolutiongaming.bootcamp.functions
 
 import java.time.Instant
+import scala.util.Try
 
 object Functions {
 
@@ -34,13 +35,13 @@ object Functions {
   def processText2(message: String, f: String => String): String = f(message)
 
   // Exercise. Implement `isEven` method that checks if a number is even.
-  def isEven(n: Int): Boolean = ???
+  def isEven(n: Int): Boolean = n % 2 == 0
 
   // Exercise. Implement `isEvenFunc` function that behaves exactly like `isEven` method.
-  val isEvenFunc: Int => Boolean = n => ???
+  val isEvenFunc: Int => Boolean = n => n % 2 == 0
 
   // Exercise. Implement `isEvenMethodToFunc` function by transforming `isEven` method into a function.
-  val isEvenMethodToFunc: Int => Boolean = n => ???
+  val isEvenMethodToFunc: Int => Boolean = isEven
 
   // There are traits in Scala to represent functions with various numbers of arguments: `Function0`,
   // `Function1`, `Function2`, etc. So `(A => B)` is the same as `Function1[A, B]`. A trait, where
@@ -68,17 +69,22 @@ object Functions {
   trait MyMap[K, V] extends (K => V)
 
   // Question. What function should we extend to check if an element belongs to a set?
-  trait MySet[A] // extends ???
+  trait MySet1[A] extends (A => A)
+  trait MySet2[A] extends (A => Boolean)
 
   // Question. What function should we extend to return a value by its index?
-  trait MySeq[A] // extends ???
+  trait MySeq1[A] extends (A => Int)
+  trait MySeq2[A] extends (Int => A)
 
   // POLYMORPHIC FUNCTIONS
 
   // Polymorphic functions have at least one type parameter.
 
   // Exercise. Implement `mapOption` function without calling `Option` APIs.
-  def mapOption[A, B](option: Option[A], f: A => B): Option[B] = ???
+  def mapOption[A, B](option: Option[A], f: A => B): Option[B] = option match {
+    case Some(value) => Some(f(value))
+    case None => None
+  }
 
   // FUNCTION COMPOSITION
 
@@ -121,7 +127,7 @@ object Functions {
   // It transforms a function that takes multiple arguments into a function that takes a single argument
   // and returns back another function. Currying can be done manually...
   val translateCurried: Language => (Language => (String => String)) = {
-    from => (to => (text => translate(text, from, to)))
+    from => (to => (text => translate(from, to, text)))
   }
 
   // ... or by calling `curried` method.
@@ -179,13 +185,13 @@ object Functions {
   // Exercises. Convert the following functions into pure functions. Replace ??? with correct return types.
 
   def parseDate(s: String): Instant = Instant.parse(s)
-  def parseDatePure(s: String): ??? = ???
+  def parseDatePure(s: String): Option[Instant] = Try(Instant.parse(s)).toOption
 
   def divide(a: Int, b: Int): Int = a / b
-  def dividePure(a: Int, b: Int): ??? = ???
+  def dividePure(a: Int, b: Int): Option[Int] = Try(a/b).toOption
 
   def isAfterNow(date: Instant): Boolean = date.isAfter(Instant.now())
-  def isAfterNowPure(/* ??? */): Boolean = ???
+  def isAfterNowPure(date: Instant, now: Instant): Boolean = date.isAfter(now)
 
   case class NonEmptyList[T](head: T, rest: List[T])
   def makeNonEmptyList[T](list: List[T]): NonEmptyList[T] = {
