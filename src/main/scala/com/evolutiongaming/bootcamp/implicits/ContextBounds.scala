@@ -7,13 +7,13 @@ object ContextBounds {
   object Exercise1 {
 
     // Let's revisit some functions we implemented while studying implicit classes:
-    def concat(a: Int, b: Int): Int = ???
+    def concat(a: Int, b: Int): Int = Integer.parseInt(s"$a$b")
 
     // Exercise 1: Implement repeat functions for various types.
     // For `Int` using `concat` function above. For others, use built-in methods.
 
     // `repeat(72, 3)` should return `727272`
-    def repeat(a: Int, times: Int): Int = ???
+    def repeat(a: Int, times: Int): Int = repeat(concat(a,a), times - 1)
 
     // `repeat("Scala", 3)` should return `"ScalaScalaScala"`
     def repeat(a: String, times: Int): String = ???
@@ -59,7 +59,13 @@ object ContextBounds {
   }
 
   object Exercise3 {
-    def repeat[T](a: T, times: Int, concatenable: Concatenable[T]): T = ???
+    def repeat[T](a: T, times: Int, concatenable: Concatenable[T]): T = {
+      if (times > 1) {
+        val tail = repeat(a, times - 1, concatenable)
+        concatenable.concat(a,tail)
+      }
+      else a
+    }
   }
 
   // Do you find this way convenient / readable? What else we could do to
