@@ -2,15 +2,23 @@ package com.evolutiongaming.bootcamp.hkt
 
 object Generics {
   case class Triple[+A](x: A, y: A, z: A) {
-    def zip[B](other: Triple[B]): Triple[(A, B)] = ??? // exercise 1 :  implement
+    def zip[B](other: Triple[B]): Triple[(A, B)] = Triple((x, other.x), (y, other.y), (z, other.z)) // exercise 1 :  implement
 
-    //    def set(index: Triple.Index, value: A): Triple[A]  //exercise 3 (hard) : fix the definition and implement
+    //exercise 3 (hard) : fix the definition and implement
+    def set[B >: A](index: Triple.Index, value: B): Triple[B] = index match {
+      case Triple.First => copy(x = value)
+      case Triple.Second => copy(y = value)
+      case Triple.Third => copy(z = value)
+    }
 
   }
 
   object Triple {
 
-    def fromList[A](elements: List[A]): Option[List[A]] = ??? // exercise 2 : implement
+    def fromList[A](elements: List[A]): Option[Triple[A]] = elements match {
+      case List(a, b, c) => Some(Triple(a, b, c))
+      case _ => None
+    } // exercise 2 : implement
 
 
     sealed trait Index
@@ -23,23 +31,31 @@ object Generics {
   }
 
 
-  trait Walker[A, M, R] { // exercise 4 : fill in correct variance annotations
+  trait Walker[-A, M, +R] { // exercise 4 : fill in correct variance annotations
     def init: M
 
     def next(element: A, previous: M): M
 
     def stop(last: M): R
 
-    def contramap[B](f: B => A): Walker[B, M, R] = ??? // exercice 5 implement
+    def contramap[B](f: B => A): Walker[B, M, R] = new Walker[B, M, R] {
+      override def init: M = Walker.this.init
+
+      override def next(element: B, previous: M): M = Walker.this.next(f(element), previous)
+
+      override def stop(last: M): R = Walker.this.stop(last)
+    } // exercise 5 implement
   }
 
 
   trait Collection[+A] {
-    //    def walk(walker: Walker[A, M, R]): R
+    def walk[M, R](walker: Walker[A, M, R]): R
 
-    //    def map(f: A => B): Collection[B] = ??? // exercise 6 : implement
+    def map[B](f: A => B): Collection[B] = new Collection[B] {
+      override def walk[M, R](walker: Walker[B, M, R]): R = Collection.this.walk(walker.contramap(f))
+    } // exercise 6 : implement
 
-    //    def flatMap(f: A => Collection[B]) : Collection[B] = ??? // HomeWork 2 : implement
+    def flatMap[B](f: A => Collection[B]): Collection[B] = ??? // HomeWork 2 : implement
   }
 
   object Collection {
