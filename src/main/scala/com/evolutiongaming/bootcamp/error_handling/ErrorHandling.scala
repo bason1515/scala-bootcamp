@@ -55,7 +55,7 @@ object ErrorHandling extends App {
   // can go wrong or there is no interest in a particular reason for a failure.
 
   // Exercise. Implement `parseIntOption` method.
-  def parseIntOption(string: String): Option[Int] = ???
+  def parseIntOption(string: String): Option[Int] = string.toIntOption
 
   // The downside of Option is that it does not encode any information about what exactly went wrong. It only
   // states the mere fact that it did.
@@ -69,7 +69,7 @@ object ErrorHandling extends App {
 
   // Exercise. Implement `parseIntEither` method, returning the parsed integer as `Right` upon success and
   // "{{string}} does not contain an integer" as `Left` upon failure.
-  def parseIntEither(string: String): Either[String, Int] = ???
+  def parseIntEither(string: String): Either[String, Int] = string.toIntOption.toRight(s"$string does not contain an integer")
 
   // As an alternative to `String`, a proper ADT can be introduced to formalize all error cases. As discussed
   // in `AlgebraicDataTypes` section, this provides a number of benefits, including an exhaustiveness check
@@ -77,19 +77,31 @@ object ErrorHandling extends App {
   //
   // Note that this is a superficial example. Always think how detailed you want your error cases to be.
   sealed trait TransferError
+
   object TransferError {
     /** Returned when amount to credit is negative. */
     final case object NegativeAmount extends TransferError
+
     /** Returned when amount to credit is zero. */
     final case object ZeroAmount extends TransferError
+
     /** Returned when amount to credit is equal or greater than 1 000 000. */
     final case object AmountIsTooLarge extends TransferError
+
     /** Returned when amount to credit is within the valid range, but has more than 2 decimal places. */
     final case object TooManyDecimals extends TransferError
   }
+
   // Exercise. Implement `credit` method, returning `Unit` as `Right` upon success and the appropriate
   // `TransferError` as `Left` upon failure.
-  def credit(amount: BigDecimal): Either[TransferError, Unit] = ???
+  import TransferError._
+  def credit(amount: BigDecimal): Either[TransferError, Unit] = amount match {
+    case a if a < 0       => Left(NegativeAmount)
+    case a if a == 0      => Left(ZeroAmount)
+    case a if a > 1000000 => Left(AmountIsTooLarge)
+    case a if a.scale > 2 => Left(TooManyDecimals)
+    case _                => Right()
+  }
 
   // `Either[Throwable, A]` is similar to `Try[A]`. However, because `Try[A]` has its error channel hardcoded
   // to a specific type and `Either[L, R]` does not, `Try[A]` provides more specific methods to deal with
@@ -110,20 +122,26 @@ object ErrorHandling extends App {
   // particular error on each iteration. Here is where Validated from Cats library can help.
 
   final case class Username(value: String) extends AnyVal
+
   final case class Age(value: Int) extends AnyVal
+
   final case class Student(username: Username, age: Age)
 
   sealed trait ValidationError
+
   object ValidationError {
     final case object UsernameLengthIsInvalid extends ValidationError {
       override def toString: String = "Username must be between 3 and 30 characters"
     }
+
     final case object UsernameHasSpecialCharacters extends ValidationError {
       override def toString: String = "Username cannot contain special characters"
     }
+
     final case object AgeIsNotNumeric extends ValidationError {
       override def toString: String = "Age must be a number"
     }
+
     final case object AgeIsOutOfBounds extends ValidationError {
       override def toString: String = "Student must be of age 18 to 75"
     }
@@ -131,6 +149,7 @@ object ErrorHandling extends App {
 
   // There is a separate lecture about Cats library, so we will not go into details here. Suffice to say
   // we need few imports to bring the power of Cats to work with Validated data type.
+
   import cats.data.ValidatedNec
   import cats.syntax.all._
 
@@ -165,7 +184,19 @@ object ErrorHandling extends App {
     // Exercise. Implement `validateAge` method, so that it returns `AgeIsNotNumeric` if the age string is not
     // a number and `AgeIsOutOfBounds` if the age is not between 18 and 75. Otherwise the age should be
     // considered valid and returned inside `AllErrorsOr`.
-    private def validateAge(age: String): AllErrorsOr[Age] = ???
+    private def validateAge(age: String): AllErrorsOr[Age] = {
+
+      def validateAgeIsNumeric: AllErrorsOr[Int] = age.toIntOption match {
+        case Some(value) => value.validNec
+        case None        => AgeIsNotNumeric.invalidNec
+      }
+
+      def validateAgeBound(a: Int): AllErrorsOr[Age] =
+        if (a >= 18 && a <= 75) Age(a).validNec
+        else AgeIsOutOfBounds.invalidNec
+
+      validateAgeIsNumeric andThen validateAgeBound
+    }
 
     // `validate` method takes raw username and age values (for example, as received via POST request),
     // validates them, transforms as needed and returns `AllErrorsOr[Student]` as a result. `mapN` method
@@ -182,6 +213,7 @@ object ErrorHandling extends App {
   // fulfilled. This is a trivial example, but imagine a more obscure one. Sooner or later this method will
   // throw an exception instead of returning JSON. The caller may no be prepared for that.
   type Json = Any
+
   def parseJson(string: String): Json = ???
 
   // Good! The caller can immediately see we do not guarantee a JSON object for every string. Moreover, this
