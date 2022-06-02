@@ -1,7 +1,6 @@
 package com.evolutiongaming.bootcamp.async
 
-import java.util.concurrent.atomic.AtomicInteger
-
+import java.util.concurrent.atomic.{AtomicInteger, AtomicReference}
 import scala.concurrent.duration._
 import scala.concurrent.{Await, ExecutionContext, Future, Promise}
 import scala.util.{Failure, Success}
@@ -85,8 +84,12 @@ object FutureFromPromise extends App {
   Add implicit args to the function if needed!
    */
 object Exercise1 extends App {
-  def firstCompleted[T](f1: Future[T], f2: Future[T])(implicit ec: ExecutionContext): Future[T] = ???
-
+  def firstCompleted[T](f1: Future[T], f2: Future[T])(implicit ec: ExecutionContext): Future[T] = {
+    val promise = Promise[T]()
+    f1.onComplete(promise.tryComplete)
+    f2.onComplete(promise.tryComplete)
+    promise.future
+  }
   {
     import scala.concurrent.ExecutionContext.Implicits.global
 
@@ -128,7 +131,12 @@ Implement sumAll using collection foldLeft and map + flatMap on Future's (or for
 If called on an empty collection, should return Future.successful(0).
  */
 object Exercise2 extends App {
-  def sumAll(futureValues: Seq[Future[Int]])(implicit ec: ExecutionContext): Future[Int] = ???
+  def sumAll(futureValues: Seq[Future[Int]])(implicit ec: ExecutionContext): Future[Int] =
+    futureValues.foldLeft(Future.successful(0)) { (acc, f) => for {
+        v1 <- acc
+        v2 <- f
+      } yield v1 +v2
+    }
 
   {
     import scala.concurrent.ExecutionContext.Implicits.global
@@ -177,7 +185,7 @@ object SharedStateSynchronized extends App {
   import scala.concurrent.ExecutionContext.Implicits.global
 
   //all variables which are read and written by multiple threads should be declared as volatile
-  @volatile
+@volatile
   var counter: Int = 0
 
   def threadSafeInc(): Unit = synchronized {
@@ -252,16 +260,16 @@ object Exercise3 extends App {
 
 
   //PLACE TO FIX - START
+  val stateRef = new AtomicReference[State](State(initialBalance, initialBalance))
   var balance1: Int = initialBalance
   var balance2: Int = initialBalance
 
   def doTaskIteration(): Unit = {
-    val State(newBalance1, newBalance2) = transfer(State(balance1, balance2))
-    balance1 = newBalance1
-    balance2 = newBalance2
+    stateRef.updateAndGet(transfer)
   }
 
   def printBalancesSum(): Unit = {
+    val State(balance1, balance2) = stateRef.get()
     println(balance1 + balance2)
   }
   //PLACE TO FIX - FINISH
