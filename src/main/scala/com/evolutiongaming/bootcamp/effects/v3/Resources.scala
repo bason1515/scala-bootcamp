@@ -1,6 +1,7 @@
 package com.evolutiongaming.bootcamp.effects.v3
 
 import cats.effect.{Blocker, ExitCode, IO, IOApp, Resource}
+import cats.syntax.all._
 import com.evolutiongaming.bootcamp.effects.v3.ResourceExample.DBModule.DBService
 import com.evolutiongaming.bootcamp.effects.v3.ResourceExample.KafkaModule.KafkaService
 
@@ -51,10 +52,22 @@ object ResourceApp extends IOApp {
       .map(_.mkString("\n"))
       .use(str => IO.delay(println(str)))
 
-  def filesProgram: IO[Unit] = ???
+  def filesProgram: IO[Unit] = (for {
+    f1 <- fileResource("ReadMe.md")
+    f2 <- fileResource("ReadMe.md")
+    f3 <- fileResource("ReadMe.md")
+  } yield (f1, f2, f3)).use {
+    case (f1, f2, f3) => List(f1, f2, f3)
+      .flatMap(_.getLines)
+      .filter(_.toLowerCase.contains("evolution"))
+      .traverse(s => IO.delay(println(s)))
+      .void
+  }
 
-  def run(args: List[String]): IO[ExitCode] =
-    resourceProgram.as(ExitCode.Success)
+  def run(args: List[String]): IO[ExitCode] = {
+//    resourceProgram.as(ExitCode.Success)
+    filesProgram.as(ExitCode.Success)
+  }
 }
 
 object InitializationOrder extends IOApp {

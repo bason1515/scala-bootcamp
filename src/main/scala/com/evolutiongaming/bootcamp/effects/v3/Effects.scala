@@ -1,6 +1,6 @@
-package com.evolutiongaming.bootcamp.effects.v3
 
-import cats.Monad
+package com.evolutiongaming.bootcamp.effects.v3
+import cats.MonadThrow
 import cats.effect.{Async, ExitCode, IO, IOApp, Sync}
 import cats.syntax.all._
 
@@ -182,6 +182,18 @@ object Exercise1_Imperative {
   import com.evolutiongaming.bootcamp.effects.Exercise1_Common.response
 
   private var counter: Int = 0
+//
+//  trait Console[F[_]] {
+//    def printlnString(value: String): F[Unit]
+//    def getString: F[String]
+//  }
+//
+//  object Console {
+//    def apply[F[_] : Sync]: Console[F] = new Console[F] {
+//      override def printlnString(value: String): F[Unit] = Sync[F].delay(println(value))
+//      override def getString: F[String] = Sync[F].delay(StdIn.readLine())
+//    }
+//  }
 
   @tailrec
   def main(args: Array[String]): Unit = {
@@ -217,8 +229,24 @@ object Exercise1_Imperative {
  *  - Tests in `EffectsSpec` to check your work
  */
 object Exercise1_Functional extends IOApp {
+  import com.evolutiongaming.bootcamp.effects.Exercise1_Common.response
 
-  def process(console: Console, counter: Int = 0): IO[ExitCode] = ???
+  def process(console: Console, counter: Int = 0): IO[ExitCode] = {
+    import console._
+
+    val output = for {
+      _ <- putString("What is your favourite animal?")
+      animal <- readString
+    } yield response(animal)
+    output.flatMap {
+      case Some(x) => putString(x) as ExitCode.Success
+      case None    =>
+        if (counter >= 2)
+          putString("I am disappointed. You have failed to answer too many times.") as ExitCode.Error
+        else
+          putString("Empty input is not valid, try again...") *> process(console, counter + 1)
+    }
+  }
 
   def run(args: List[String]): IO[ExitCode] = process(ConsoleIO)
 }
@@ -242,7 +270,7 @@ object SuspendApp extends IOApp {
   ): IO[Long] =
     n match {
       case 0 => IO.pure(a)
-      case _ => fib(n - 1, b, a + b).map(_ + 0) // Question: Why did I add this useless `.map` here?
+      case _ => IO.defer(fib(n - 1, b, a + b).map(_ + 0)) // Question: Why did I add this useless `.map` here?
     }
 
   def run(args: List[String]): IO[ExitCode] =
@@ -393,16 +421,35 @@ object ErrorsExercise extends IOApp {
     override def toString: String = s"This is $name and he is $age years old"
   }
 
-  def readPerson[F[_]](console: Console[F]): F[Person] = {
+  def readPerson[F[_]: MonadThrow](console: Console[F]): F[Person] = {
 
-    val readName: F[Name] = ???
+    val readName: F[Name] = for {
+      _ <- console.putString("Enter person name:")
+      nameStr <- console.readString
+      name <- Name.from(nameStr).fold(
+        _.raiseError[F, Name],
+        _.pure[F]
+      )
+    } yield name
 
-    val readAge: F[Age] = ???
+    val readAge: F[Age] = for {
+      _ <- console.putString("Enter person age:")
+      ageStr <- console.readString
+      ageInt <- ageStr.toIntOption
+        .map(_.pure[F])
+        .getOrElse(new IllegalArgumentException("Age should be Integer").raiseError[F, Int])
+      age <- Age.from(ageInt).liftTo[F]
+    } yield age
 
-    ???
+    (readName, readAge).mapN(Person)
   }
 
-  def program[F[_]: Monad](console: Console[F]): F[Unit] = ??? // read person and print it
+  def program[F[_]: MonadThrow](console: Console[F]): F[Unit] =
+    readPerson(console)
+      .flatMap(p => console.putString(p.toString)) // read person and print it
+      .handleErrorWith { error =>
+        console.putString(s"Reading person data failed with an error: ${error.getMessage}")
+      }
 
   def run(args: List[String]): IO[ExitCode] =
     program(Console[IO]).as(ExitCode.Success)
